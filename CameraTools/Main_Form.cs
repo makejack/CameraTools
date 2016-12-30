@@ -20,12 +20,16 @@ namespace CameraTools
 
         private AnShiBaoClientSdk.IPCSDK_CALLBACK AnShiBaoPlateInfoCallback;
 
+        private QianYiClientSdk.FNetFindDeviceCallback QianYiFindDeviceCallBack;
+        private QianYiClientSdk.FGetImageCB QianYiGetImageCallBack;
+
         private List<CameraParameter> mSearchCamera;
         private List<ConnectionCamera> mConnectionCamera;
 
         private System.Timers.Timer HideRecordImg;
         private bool InitAnShiBao;
         private bool InitHuoYan;
+        private bool InitQianYi;
         private int HuoYanFindDeviceHwnd;
         private PictureBox _selectedcamera;
         private PictureBox SelectedCamera
@@ -104,6 +108,120 @@ namespace CameraTools
                 AnShiBaoClientSdk.IPCSDK_Register_Callback(AnShiBaoPlateInfoCallback);
                 InitAnShiBao = true;
             }
+
+            //设置搜索相机回调函数
+            QianYiFindDeviceCallBack = FindDevice;
+
+            //设置获取图片信息回调
+            QianYiGetImageCallBack = GetImage;
+
+            //芊熠全局初始化
+            result = QianYiClientSdk.Net_Init();
+            if (result == 0)
+            {
+                QianYiClientSdk.Net_RegImageRecv(QianYiGetImageCallBack);
+                InitQianYi = true;
+            }
+
+        }
+
+        /// <summary>
+        /// 通过注册回调获取图片信息
+        /// </summary>
+        /// <param name="tHandle"></param>
+        /// <param name="uiImageId"></param>
+        /// <param name="tImageInfo"></param>
+        /// <param name="tPicInfo"></param>
+        /// <returns></returns>
+        private int GetImage(int tHandle, uint uiImageId, ref QianYiClientSdk.T_ImageUserInfo tImageInfo, ref QianYiClientSdk.T_PicInfo tPicInfo)
+        {
+            //车辆图像
+            if (tImageInfo.ucViolateCode == 0)
+            {
+                string plate = System.Text.Encoding.Default.GetString(tImageInfo.szLprResult).Replace("\0", "");
+                string cartype = "未知类型";
+                switch (tImageInfo.ucVehicleSize)//车型
+                {
+                    case 1:
+                        {
+                            cartype = "大型车";
+                            break;
+                        }
+                    case 2:
+                        {
+                            cartype = "中型车";
+                            break;
+                        }
+                    case 3:
+                        {
+                            cartype = "小型车";
+                            break;
+                        }
+                    case 4:
+                        {
+                            cartype = "摩托车";
+                            break;
+                        }
+                    case 5:
+                        {
+                            cartype = "行人";
+                            break;
+                        }
+                    default:
+                        {
+                            cartype = "未知车型";
+                            break;
+                        }
+                }
+                string color = "未识别";
+                switch (tImageInfo.ucPlateColor)//车牌颜色
+                {
+                    case 0:
+                        color = "蓝色";
+                        break;
+                    case 1:
+                        color = "黄色";
+                        break;
+                    case 2:
+                        color = "白色";
+                        break;
+                    case 3:
+                        color = "黑色";
+                        break;
+                    case 4:
+                    default:
+                        color = "未识别";
+                        break;
+                }
+
+                string fullpath = string.Empty;
+                string platepath = string.Empty;
+                DateTime now = GetImgSavePath(plate, ref fullpath, ref platepath);
+
+                FileStream fs;
+                if (tPicInfo.ptPanoramaPicBuff != IntPtr.Zero && tPicInfo.uiPanoramaPicLen != 0)
+                {
+                    byte[] BytePanoramaPicBuff = new byte[tPicInfo.uiPanoramaPicLen];
+                    Marshal.Copy(tPicInfo.ptPanoramaPicBuff, BytePanoramaPicBuff, 0, (int)tPicInfo.uiPanoramaPicLen);
+                    fs = new FileStream(fullpath, FileMode.Create, FileAccess.Write | FileAccess.Read, FileShare.None);
+                    fs.Write(BytePanoramaPicBuff, 0, (int)tPicInfo.uiPanoramaPicLen);
+                    fs.Close();
+                    fs.Dispose();
+                }
+
+                if (tPicInfo.ptVehiclePicBuff != IntPtr.Zero && tPicInfo.uiVehiclePicLen != 0)
+                {
+                    byte[] ByteVehiclePicBuff = new byte[tPicInfo.uiVehiclePicLen];
+                    Marshal.Copy(tPicInfo.ptVehiclePicBuff, ByteVehiclePicBuff, 0, (int)tPicInfo.uiVehiclePicLen);
+                    fs = new FileStream(platepath, FileMode.Create, FileAccess.Write | FileAccess.Read, FileShare.None);
+                    fs.Write(ByteVehiclePicBuff, 0, (int)tPicInfo.uiVehiclePicLen);
+                    fs.Close();
+                    fs.Dispose();
+                }
+
+                ShowPlateInfo(tHandle, platepath, plate, now, cartype, color);
+            }
+            return 0;
         }
 
         /// <summary>
@@ -113,11 +231,47 @@ namespace CameraTools
         /// <param name="e"></param>
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
-            //全局释放
-            if (InitHuoYan)
-                HuoYanClientSdk.VzLPRClient_Cleanup();
-            if (InitAnShiBao)
-                AnShiBaoClientSdk.IPCSDK_UnInit();
+            try
+            {
+                foreach (ConnectionCamera item in mConnectionCamera)
+                {
+                    switch (item.CameraType)
+                    {
+                        case CameraTypes.AnShiBao:
+                            AnShiBaoClientSdk.IPCSDK_Stop_Stream(item.IP);
+                            break;
+                        case CameraTypes.HuoYan:
+                            //停止播放指定的播放句柄
+                            int result = HuoYanClientSdk.VzLPRClient_StopRealPlay(item.ShowHwnd);
+                            if (result == 0)
+                            {
+                                //关闭回调
+                                HuoYanClientSdk.VzLPRClient_SetPlateInfoCallBack(item.OpenHwnd, null, IntPtr.Zero, 1);
+                                //关闭一个设备
+                                HuoYanClientSdk.VzLPRClient_Close(item.OpenHwnd);
+                            }
+                            break;
+                        case CameraTypes.QianYi:
+
+                            QianYiClientSdk.Net_StopVideo(item.OpenHwnd);
+                            QianYiClientSdk.Net_DisConnCamera(item.OpenHwnd);
+                            QianYiClientSdk.Net_DelCamera(item.OpenHwnd);
+                            break;
+                    }
+                }
+
+                //全局释放
+                if (InitHuoYan)
+                    HuoYanClientSdk.VzLPRClient_Cleanup();
+                if (InitAnShiBao)
+                    AnShiBaoClientSdk.IPCSDK_UnInit();
+                if (InitQianYi)
+                    QianYiClientSdk.Net_UNinit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>
@@ -162,6 +316,10 @@ namespace CameraTools
                 {
                     FindDevice();
                 }
+
+                if (InitQianYi)
+                    //开始查找设备
+                    QianYiClientSdk.Net_FindDevice(FindDevice, IntPtr.Zero);
             }
             catch (Exception ex)
             {
@@ -231,6 +389,29 @@ namespace CameraTools
         }
 
         /// <summary>
+        /// 通过回调函数搜索局域网内相机的ip等信息,若要调用该函数，电脑需装有winshark抓包工具，提供必要的库支持
+        /// </summary>
+        /// <param name="ptFindDevice">相机搜索信息结构体</param>
+        /// <param name="obj">回调函数上下文</param>
+        /// <returns></returns>
+        private int FindDevice(ref QianYiClientSdk.T_RcvMsg ptFindDevice, IntPtr obj)
+        {
+            CameraParameter param = new CameraParameter()
+            {
+                CameraType = CameraTypes.QianYi,
+                pStrIPAddr = QianYiClientSdk.IntToIp(QianYiClientSdk.Reverse_uint(ptFindDevice.tNetSetup.uiIPAddress)),
+                uPort1 = 30000
+            };
+
+            if (!CameraIsExist(param))
+            {
+                ShowFindDevice(param);
+            }
+
+            return 0;
+        }
+
+        /// <summary>
         /// 通过该回调函数获得找到的设备基本信息 
         /// </summary>
         /// <param name="pStrDevName">设备名称 </param>
@@ -267,19 +448,20 @@ namespace CameraTools
         /// <summary>
         /// 显示找到的设备信息
         /// </summary>
-        /// <param name="parameter"></param>
-        private void ShowFindDevice(CameraParameter parameter)
+        /// <param name="param"></param>
+        private void ShowFindDevice(CameraParameter param)
         {
             DelegateThread ShowDeviceDelegate = delegate()
             {
-                mSearchCamera.Add(parameter);
+                mSearchCamera.Add(param);
 
-                TreeNode node = new TreeNode(parameter.pStrIPAddr + ":" + parameter.uPort1);
-                node.Nodes.Add("DevName", parameter.pStrDevName);
-                node.Nodes.Add("IP", parameter.pStrIPAddr);
-                node.Nodes.Add("Port", parameter.uPort1.ToString());
-                node.Nodes.Add("SL", parameter.SL.ToString());
-                node.Nodes.Add("SH", parameter.SH.ToString());
+                TreeNode node = new TreeNode(param.pStrIPAddr + ":" + param.uPort1);
+                node.Nodes.Add("CameraBrand", param.CameraType.ToString());
+                node.Nodes.Add("DevName", param.pStrDevName);
+                node.Nodes.Add("IP", param.pStrIPAddr);
+                node.Nodes.Add("Port", param.uPort1.ToString());
+                node.Nodes.Add("SL", param.SL.ToString());
+                node.Nodes.Add("SH", param.SH.ToString());
                 tv_CameraList.Nodes.Add(node);
                 if (tv_CameraList.SelectedNode == null)
                     btn_Open.Enabled = true;
@@ -325,7 +507,8 @@ namespace CameraTools
                         }
                         else
                         {
-                            goto default;
+                            pb.Dispose();
+                            pb = null;
                         }
                         break;
                     case CameraTypes.HuoYan:
@@ -334,7 +517,9 @@ namespace CameraTools
                         if (m_hLPRClient == 0)
                         {
                             MessageBox.Show("打开失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            goto default; 
+                            pb.Dispose();
+                            pb = null;
+                            return;
                         }
                         connectionparam.OpenHwnd = m_hLPRClient;
                         //播放实时视频 
@@ -350,12 +535,47 @@ namespace CameraTools
                         }
                         else
                         {
-                            goto default;
-                        }
-                        break;
-                    default:
                             pb.Dispose();
                             pb = null;
+                        }
+                        break;
+                    case CameraTypes.QianYi:
+
+                        int nCamId = QianYiClientSdk.Net_AddCamera(cameraparam.pStrIPAddr);
+                        if (nCamId != 0)
+                        {
+                            MessageBox.Show("添加相机失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            pb.Dispose();
+                            pb = null;
+                            return;
+                        }
+                        connectionparam.OpenHwnd = nCamId;
+
+                        int iRet = QianYiClientSdk.Net_ConnCamera(nCamId, 0, 10);
+                        if (iRet != 0)
+                        {
+                            QianYiClientSdk.Net_DelCamera(nCamId);
+                            MessageBox.Show("连接相机失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            pb.Dispose();
+                            pb = null;
+                            return;
+                        }
+
+                        iRet = QianYiClientSdk.Net_StartVideo(nCamId, 0, pb.Handle);
+                        if (iRet != 0)
+                        {
+                            QianYiClientSdk.Net_DisConnCamera(nCamId);
+                            QianYiClientSdk.Net_DelCamera(nCamId);
+                            MessageBox.Show("打开视频失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            pb.Dispose();
+                            pb = null;
+                            return;
+                        }
+                        OpenCameraShowControls(node, pb, connectionparam);
+                        break;
+                    default:
+                        pb.Dispose();
+                        pb = null;
                         break;
                 }
             }
@@ -536,6 +756,87 @@ namespace CameraTools
                 //获取车牌识别结果信息
                 HuoYanClientSdk.TH_PlateResult plateresult = (HuoYanClientSdk.TH_PlateResult)Marshal.PtrToStructure(pResult, typeof(HuoYanClientSdk.TH_PlateResult));
                 string strlicense = new string(plateresult.license).Replace("\0", "");
+                string cartype = "未知车牌";
+                switch (plateresult.nType)
+                {
+                    //车牌类型
+                    case HuoYanClientSdk.LT_UNKNOWN:   //未知车牌
+                        cartype = "未知车牌";
+                        break;
+                    case HuoYanClientSdk.LT_BLUE://蓝牌小汽车
+                        cartype = "蓝牌小汽车";
+                        break;
+                    case HuoYanClientSdk.LT_BLACK:   //黑牌小汽车
+                        cartype = "黑牌小汽车";
+                        break;
+                    case HuoYanClientSdk.LT_YELLOW://单排黄牌
+                        cartype = "单排黄牌";
+                        break;
+                    case HuoYanClientSdk.LT_YELLOW2:   //双排黄牌（大车尾牌，农用车）
+                        cartype = "又排黄牌";
+                        break;
+                    case HuoYanClientSdk.LT_POLICE:   //警车车牌
+                        cartype = "警车车牌";
+                        break;
+                    case HuoYanClientSdk.LT_ARMPOL:   //武警车牌
+                        cartype = "武警车牌";
+                        break;
+                    case HuoYanClientSdk.LT_INDIVI://个性化车牌
+                        cartype = "个性化车牌";
+                        break;
+                    case HuoYanClientSdk.LT_ARMY:   //单排军车牌
+                        cartype = "单排军车牌";
+                        break;
+                    case HuoYanClientSdk.LT_ARMY2:   //双排军车牌
+                        cartype = "双排军车牌";
+                        break;
+                    case HuoYanClientSdk.LT_EMBASSY:  //使馆车牌
+                        cartype = "使馆车牌";
+                        break;
+                    case HuoYanClientSdk.LT_HONGKONG://香港进出中国大陆车牌
+                        cartype = "香港进出中国大陆车牌";
+                        break;
+                    case HuoYanClientSdk.LT_TRACTOR:  //农用车牌
+                        cartype = "农用车牌";
+                        break;
+                    case HuoYanClientSdk.LT_COACH://教练车牌
+                        cartype = "教练车牌";
+                        break;
+                    case HuoYanClientSdk.LT_MACAO://澳门进出中国大陆车牌
+                        cartype = "澳门进出中国大陆车牌";
+                        break;
+                    case HuoYanClientSdk.LT_ARMPOL2://双层武警车牌
+                        cartype = "双层武警车牌";
+                        break;
+                    case HuoYanClientSdk.LT_ARMPOL_ZONGDUI:// 武警总队车牌
+                        cartype = "武警总队车牌";
+                        break;
+                    case HuoYanClientSdk.LT_ARMPOL2_ZONGDUI: // 双层武警总队车牌
+                        cartype = "双层武警总队车牌";
+                        break;
+                }
+                string color = "未知";
+                switch (plateresult.nColor)
+                {
+                    case 0:
+                        color = "未知";
+                        break;
+                    case 1:
+                        color = "蓝色";
+                        break;
+                    case 2:
+                        color = "黄色";
+                        break;
+                    case 3:
+                        color = "白色";
+                        break;
+                    case 4:
+                        color = "黑色";
+                        break;
+                    case 5:
+                        color = "绿色";
+                        break;
+                }
                 string fullpath = string.Empty;
                 string platepath = string.Empty;
                 DateTime now = GetImgSavePath(strlicense, ref fullpath, ref platepath);
@@ -544,7 +845,7 @@ namespace CameraTools
                 if (!File.Exists(platepath))
                     HuoYanClientSdk.VzLPRClient_ImageSaveToJpeg(pImgPlateClip, platepath, 100);
 
-                ShowPlateInfo(handle, platepath, strlicense, now, plateresult.nType, plateresult.nColor);
+                ShowPlateInfo(handle, platepath, strlicense, now, cartype, color);
             }
             catch (Exception ex)
             {
@@ -562,7 +863,7 @@ namespace CameraTools
         /// <param name="now"></param>
         /// <param name="platetype"></param>
         /// <param name="platecolor"></param>
-        private void ShowPlateInfo(int handle, string platepath, string plate, DateTime now, int platetype, int platecolor)
+        private void ShowPlateInfo(int handle, string platepath, string plate, DateTime now, string platetype, string platecolor)
         {
             string ip = string.Empty;
             foreach (ConnectionCamera item in mConnectionCamera)
@@ -571,7 +872,7 @@ namespace CameraTools
                 ip = item.IP;
                 break;
             }
-            ShowPlateInfo(ip, platepath, plate, now, platetype, platecolor.ToString());
+            ShowPlateInfo(ip, platepath, plate, now, platetype, platecolor);
         }
 
         /// <summary>
@@ -641,7 +942,7 @@ namespace CameraTools
                             strcolor = Marshal.PtrToStringAnsi(color);
 
                         }
-                        ShowPlateInfo(ip, platepath, plate, now, 0, strcolor);
+                        ShowPlateInfo(ip, platepath, plate, now, "未知", strcolor);
                     }
                 }
             }
@@ -672,7 +973,7 @@ namespace CameraTools
         /// <param name="now"></param>
         /// <param name="platetype"></param>
         /// <param name="color"></param>
-        private void ShowPlateInfo(string ip, string platepath, string plate, DateTime now, int platetype, string color)
+        private void ShowPlateInfo(string ip, string platepath, string plate, DateTime now, string platetype, string color)
         {
             DelegateThread ShowInfo = delegate
             {
@@ -722,31 +1023,48 @@ namespace CameraTools
         /// <param name="e"></param>
         private void btn_Close_Click(object sender, EventArgs e)
         {
+            if (SelectedCamera == null) return;
+            ConnectionCamera param = SelectedCamera.Tag as ConnectionCamera;
+            CloseCamera(param);
+        }
+
+        /// <summary>
+        /// 关闭摄像机
+        /// </summary>
+        /// <param name="param"></param>
+        private void CloseCamera(ConnectionCamera param)
+        {
             try
             {
-                if (SelectedCamera == null) return;
-                ConnectionCamera cameraparam = SelectedCamera.Tag as ConnectionCamera;
-                if (cameraparam != null)
+                if (param != null)
                 {
-                    switch (cameraparam.CameraType)
+                    switch (param.CameraType)
                     {
                         case CameraTypes.AnShiBao:
-                            AnShiBaoClientSdk.IPCSDK_Stop_Stream(cameraparam.IP);
+                            AnShiBaoClientSdk.IPCSDK_Stop_Stream(param.IP);
 
-                            RemoveShowControls(SelectedCamera, cameraparam);
+                            RemoveShowControls(SelectedCamera, param);
                             break;
                         case CameraTypes.HuoYan:
                             //停止播放指定的播放句柄
-                            int result = HuoYanClientSdk.VzLPRClient_StopRealPlay(cameraparam.ShowHwnd);
+                            int result = HuoYanClientSdk.VzLPRClient_StopRealPlay(param.ShowHwnd);
                             if (result == 0)
                             {
                                 //关闭回调
-                                HuoYanClientSdk.VzLPRClient_SetPlateInfoCallBack(cameraparam.OpenHwnd, null, IntPtr.Zero, 1);
+                                HuoYanClientSdk.VzLPRClient_SetPlateInfoCallBack(param.OpenHwnd, null, IntPtr.Zero, 1);
                                 //关闭一个设备
-                                HuoYanClientSdk.VzLPRClient_Close(cameraparam.OpenHwnd);
+                                HuoYanClientSdk.VzLPRClient_Close(param.OpenHwnd);
 
-                                RemoveShowControls(SelectedCamera, cameraparam);
+                                RemoveShowControls(SelectedCamera, param);
                             }
+                            break;
+                        case CameraTypes.QianYi:
+
+                            QianYiClientSdk.Net_StopVideo(param.OpenHwnd);
+                            QianYiClientSdk.Net_DisConnCamera(param.OpenHwnd);
+                            QianYiClientSdk.Net_DelCamera(param.OpenHwnd);
+
+                            RemoveShowControls(SelectedCamera, param);
                             break;
                     }
                 }
@@ -828,6 +1146,7 @@ namespace CameraTools
         {
             TreeNode node = e.Node.Parent;
             node = node ?? e.Node;
+            if (mSearchCamera.Count <= 0) return;
             if (string.IsNullOrEmpty(mSearchCamera[node.Index].pStrIPAddr))
             {
                 btn_Open.Enabled = false;
@@ -887,99 +1206,6 @@ namespace CameraTools
         /// <param name="e"></param>
         private void dgv_ResultList_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.ColumnIndex == 5)
-            {
-                if (System.Text.RegularExpressions.Regex.IsMatch(e.Value.ToString(), @"\d"))
-                {
-                    int ntype = Convert.ToInt32(e.Value);
-                    switch (ntype)
-                    {
-                        //车牌类型
-                        case HuoYanClientSdk.LT_UNKNOWN:   //未知车牌
-                            e.Value = "未知车牌";
-                            break;
-                        case HuoYanClientSdk.LT_BLUE://蓝牌小汽车
-                            e.Value = "蓝牌小汽车";
-                            break;
-                        case HuoYanClientSdk.LT_BLACK:   //黑牌小汽车
-                            e.Value = "黑牌小汽车";
-                            break;
-                        case HuoYanClientSdk.LT_YELLOW://单排黄牌
-                            e.Value = "单排黄牌";
-                            break;
-                        case HuoYanClientSdk.LT_YELLOW2:   //双排黄牌（大车尾牌，农用车）
-                            e.Value = "又排黄牌";
-                            break;
-                        case HuoYanClientSdk.LT_POLICE:   //警车车牌
-                            e.Value = "警车车牌";
-                            break;
-                        case HuoYanClientSdk.LT_ARMPOL:   //武警车牌
-                            e.Value = "武警车牌";
-                            break;
-                        case HuoYanClientSdk.LT_INDIVI://个性化车牌
-                            e.Value = "个性化车牌";
-                            break;
-                        case HuoYanClientSdk.LT_ARMY:   //单排军车牌
-                            e.Value = "单排军车牌";
-                            break;
-                        case HuoYanClientSdk.LT_ARMY2:   //双排军车牌
-                            e.Value = "双排军车牌";
-                            break;
-                        case HuoYanClientSdk.LT_EMBASSY:  //使馆车牌
-                            e.Value = "使馆车牌";
-                            break;
-                        case HuoYanClientSdk.LT_HONGKONG://香港进出中国大陆车牌
-                            e.Value = "香港进出中国大陆车牌";
-                            break;
-                        case HuoYanClientSdk.LT_TRACTOR:  //农用车牌
-                            e.Value = "农用车牌";
-                            break;
-                        case HuoYanClientSdk.LT_COACH://教练车牌
-                            e.Value = "教练车牌";
-                            break;
-                        case HuoYanClientSdk.LT_MACAO://澳门进出中国大陆车牌
-                            e.Value = "澳门进出中国大陆车牌";
-                            break;
-                        case HuoYanClientSdk.LT_ARMPOL2://双层武警车牌
-                            e.Value = "双层武警车牌";
-                            break;
-                        case HuoYanClientSdk.LT_ARMPOL_ZONGDUI:// 武警总队车牌
-                            e.Value = "武警总队车牌";
-                            break;
-                        case HuoYanClientSdk.LT_ARMPOL2_ZONGDUI: // 双层武警总队车牌
-                            e.Value = "双层武警总队车牌";
-                            break;
-                    }
-                }
-            }
-            else if (e.ColumnIndex == 6)
-            {
-                if (System.Text.RegularExpressions.Regex.IsMatch(e.Value.ToString(), "[0-9]"))
-                {
-                    int ncolor = Convert.ToInt32(e.Value);
-                    switch (ncolor)
-                    {
-                        case 0:
-                            e.Value = "未知";
-                            break;
-                        case 1:
-                            e.Value = "蓝色";
-                            break;
-                        case 2:
-                            e.Value = "黄色";
-                            break;
-                        case 3:
-                            e.Value = "白色";
-                            break;
-                        case 4:
-                            e.Value = "黑色";
-                            break;
-                        case 5:
-                            e.Value = "绿色";
-                            break;
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -993,19 +1219,26 @@ namespace CameraTools
             ConnectionCamera cameraparam = SelectedCamera.Tag as ConnectionCamera;
             if (cameraparam != null)
             {
-                if (cameraparam.CameraType == CameraTypes.HuoYan)
+                switch (cameraparam.CameraType)
                 {
-                    using (HuoYanParamSet_Form hyps = new HuoYanParamSet_Form(cameraparam.OpenHwnd))
-                    {
-                        hyps.ShowDialog();
-                    }
-                }
-                else
-                {
-                    using (AnShiBaoParamSet_Form asbps = new AnShiBaoParamSet_Form(cameraparam.IP))
-                    {
-                        asbps.ShowDialog();
-                    }
+                    case CameraTypes.AnShiBao:
+                        using (AnShiBaoParamSet_Form asbps = new AnShiBaoParamSet_Form(cameraparam.IP))
+                        {
+                            asbps.ShowDialog();
+                        }
+                        break;
+                    case CameraTypes.HuoYan:
+                        using (HuoYanParamSet_Form hyps = new HuoYanParamSet_Form(cameraparam.OpenHwnd))
+                        {
+                            hyps.ShowDialog();
+                        }
+                        break;
+                    case CameraTypes.QianYi:
+                        using (QianYiParamSet_Form qyps = new QianYiParamSet_Form(cameraparam.OpenHwnd))
+                        {
+                            qyps.ShowDialog();
+                        }
+                        break;
                 }
             }
         }
@@ -1021,16 +1254,23 @@ namespace CameraTools
             ConnectionCamera cameraparam = SelectedCamera.Tag as ConnectionCamera;
             if (cameraparam != null)
             {
-                if (cameraparam.CameraType == CameraTypes.HuoYan)
+                switch (cameraparam.CameraType)
                 {
-                    using (RuleCfg_Form rf = new RuleCfg_Form(cameraparam.OpenHwnd))
-                    {
-                        rf.ShowDialog();
-                    }
-                }
-                else
-                {
-                    AnShiBaoSetRoi(cameraparam.IP);
+                    case CameraTypes.AnShiBao:
+                        AnShiBaoSetRoi(cameraparam.IP);
+                        break;
+                    case CameraTypes.HuoYan:
+                        using (HuoYanRuleCfg_Form rf = new HuoYanRuleCfg_Form(cameraparam.OpenHwnd))
+                        {
+                            rf.ShowDialog();
+                        }
+                        break;
+                    case CameraTypes.QianYi:
+                        using (QianYiRuleCfg_Form rf = new QianYiRuleCfg_Form(cameraparam.OpenHwnd))
+                        {
+                            rf.ShowDialog();
+                        }
+                        break;
                 }
             }
         }
@@ -1043,6 +1283,8 @@ namespace CameraTools
         {
             if (!AnShiBaoIsSetRoi)
             {
+                if (SelectedCamera.Width == 384 && SelectedCamera.Height == 216)
+                    pb_DoubleClick(SelectedCamera, null);
                 m_ROIhRate /= m_nX;
                 m_ROIvRate /= m_nY;
                 AnShiBaoCameraPara = Marshal.AllocHGlobal(32768);
@@ -1054,10 +1296,8 @@ namespace CameraTools
                     MessageBox.Show("无法获取识别相机参数", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
-                btn_RuleCfg.Text = "保存设置";
-                if (SelectedCamera.Width == 384 && SelectedCamera.Height == 216)
-                    pb_DoubleClick(SelectedCamera, null);
                 AnShiBaoCameraIp = cameraip;
+                btn_RuleCfg.Text = "保存设置";
                 DrawRoi();
                 SelectedCamera.MouseDown += AnShiBaoDrawRoiMouseDown;
                 SelectedCamera.MouseMove += AnShiBaoDrawRoiMouseMove;
@@ -1219,43 +1459,54 @@ namespace CameraTools
             if (SelectedCamera == null) return;
             ConnectionCamera cameraparam = SelectedCamera.Tag as ConnectionCamera;
             if (cameraparam == null) return;
-            if (cameraparam.CameraType == CameraTypes.HuoYan)
+            switch (cameraparam.CameraType)
             {
-                using (NetCfg_Form nf = new NetCfg_Form(cameraparam.IP, cameraparam.SL, cameraparam.SH))
-                {
-                    nf.ShowDialog();
-                    object obj = nf.Tag;
-                    if (obj == null) return;
-                    string ip = obj.ToString();
-
+                case CameraTypes.AnShiBao:
+                    string processpath = Environment.CurrentDirectory + @"\DeviceSearch.exe";
+                    Process[] ps = Process.GetProcessesByName("DeviceSearch");
+                    if (ps.Length > 0)
+                    {
+                        return;
+                    }
+                    Process process = new Process();
+                    process.StartInfo.FileName = processpath;
+                    process.Start();
+                    break;
+                case CameraTypes.QianYi:
+                case CameraTypes.HuoYan:
+                    if (cameraparam.CameraType == CameraTypes.HuoYan)
+                    {
+                        using (HuoYanNetCfg_Form nf = new HuoYanNetCfg_Form(cameraparam.IP, cameraparam.SL, cameraparam.SH))
+                        {
+                            if (nf.ShowDialog() != DialogResult.OK)
+                                return;
+                        }
+                    }
+                    else if (cameraparam.CameraType == CameraTypes.QianYi)
+                    {
+                        using (QianYiModifyIP mi = new QianYiModifyIP()
+                        {
+                            strIp = cameraparam.IP,
+                            nCamId = cameraparam.OpenHwnd
+                        })
+                        {
+                            if (mi.ShowDialog() != DialogResult.OK)
+                                return;
+                        }
+                    }
                     foreach (CameraParameter item in mSearchCamera)
                     {
-                        if (item.pStrIPAddr == cameraparam.IP && item.CameraType == CameraTypes.HuoYan)
+                        if (item.pStrIPAddr == cameraparam.IP && item.CameraType == cameraparam.CameraType)
                         {
-                            item.pStrIPAddr = string.Empty;
+                            mSearchCamera.Remove(item);
                             break;
                         }
                     }
 
                     TreeNode node = tv_CameraList.Nodes[cameraparam.Index];
-                    node.Text = "IP已修改:" + cameraparam.IP + ":" + cameraparam.Port;
-
-                    btn_ModifyIp.Enabled = false;
-                    btn_RuleCfg.Enabled = false;
-                    btn_ParamSet.Enabled = false;
-                }
-            }
-            else if (cameraparam.CameraType == CameraTypes.AnShiBao)
-            {
-                string processpath = Environment.CurrentDirectory + @"\DeviceSearch.exe";
-                Process[] ps = Process.GetProcessesByName("DeviceSearch");
-                if (ps.Length > 0)
-                {
-                    return;
-                }
-                Process process = new Process();
-                process.StartInfo.FileName = processpath;
-                process.Start();
+                    CloseCamera(cameraparam);
+                    tv_CameraList.Nodes.Remove(node);
+                    break;
             }
         }
 
@@ -1318,7 +1569,6 @@ namespace CameraTools
         private Point GetImgShowPoint(Size size)
         {
             Point p = PointToClient(MousePosition);
-            Text = string.Format("x:{0} y:{1}", p.X, p.Y);
             p.Y -= size.Height;
             if (p.Y < 0)
             {

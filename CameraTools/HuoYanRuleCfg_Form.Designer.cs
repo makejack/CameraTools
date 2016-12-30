@@ -1,6 +1,6 @@
 ﻿namespace CameraTools
 {
-    partial class RuleCfg_Form
+    partial class HuoYanRuleCfg_Form
     {
         /// <summary>
         /// Required designer variable.

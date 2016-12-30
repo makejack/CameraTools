@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace CameraTools
 {
-    public partial class RuleCfg_Form : Form
+    public partial class HuoYanRuleCfg_Form : Form
     {
         private int _hplay;
         private uint _draw_Width = 1920;
@@ -41,7 +41,7 @@ namespace CameraTools
         /// 构造函数
         /// </summary>
         /// <param name="hplay"></param>
-        public RuleCfg_Form(int hplay)
+        public HuoYanRuleCfg_Form(int hplay)
         {
             InitializeComponent();
             // TODO: Complete member initialization

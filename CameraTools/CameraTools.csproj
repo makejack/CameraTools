@@ -59,6 +59,9 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Camera.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -74,11 +77,11 @@
     <Compile Include="AnShiBaoParamSet_Form.Designer.cs">
       <DependentUpon>AnShiBaoParamSet_Form.cs</DependentUpon>
     </Compile>
-    <Compile Include="NetCfg_Form.cs">
+    <Compile Include="HuoYanNetCfg_Form.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="NetCfg_Form.designer.cs">
-      <DependentUpon>NetCfg_Form.cs</DependentUpon>
+    <Compile Include="HuoYanNetCfg_Form.designer.cs">
+      <DependentUpon>HuoYanNetCfg_Form.cs</DependentUpon>
     </Compile>
     <Compile Include="HuoYanParamSet_Form.cs">
       <SubType>Form</SubType>
@@ -86,8 +89,27 @@
     <Compile Include="HuoYanParamSet_Form.Designer.cs">
       <DependentUpon>HuoYanParamSet_Form.cs</DependentUpon>
     </Compile>
+    <Compile Include="QianYiModifyIP.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="QianYiModifyIP.designer.cs">
+      <DependentUpon>QianYiModifyIP.cs</DependentUpon>
+    </Compile>
+    <Compile Include="QianYiParamSet_Form.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="QianYiParamSet_Form.Designer.cs">
+      <DependentUpon>QianYiParamSet_Form.cs</DependentUpon>
+    </Compile>
+    <Compile Include="QianYiRuleCfg_Form.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="QianYiRuleCfg_Form.Designer.cs">
+      <DependentUpon>QianYiRuleCfg_Form.cs</DependentUpon>
+    </Compile>
     <Compile Include="Sdk\AnShiBaoClientSdk.cs" />
     <Compile Include="Class\CameraParameter.cs" />
+    <Compile Include="Sdk\QianYiClientSdk.cs" />
     <Compile Include="Vodio_Form.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -101,11 +123,11 @@
     <Compile Include="Main_Form.Designer.cs">
       <DependentUpon>Main_Form.cs</DependentUpon>
     </Compile>
-    <Compile Include="RuleCfg_Form.cs">
+    <Compile Include="HuoYanRuleCfg_Form.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="RuleCfg_Form.Designer.cs">
-      <DependentUpon>RuleCfg_Form.cs</DependentUpon>
+    <Compile Include="HuoYanRuleCfg_Form.Designer.cs">
+      <DependentUpon>HuoYanRuleCfg_Form.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -116,17 +138,26 @@
     <EmbeddedResource Include="HuoYanParamSet_Form.resx">
       <DependentUpon>HuoYanParamSet_Form.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="QianYiModifyIP.resx">
+      <DependentUpon>QianYiModifyIP.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QianYiParamSet_Form.resx">
+      <DependentUpon>QianYiParamSet_Form.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QianYiRuleCfg_Form.resx">
+      <DependentUpon>QianYiRuleCfg_Form.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Vodio_Form.resx">
       <DependentUpon>Vodio_Form.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Main_Form.resx">
       <DependentUpon>Main_Form.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="NetCfg_Form.resx">
-      <DependentUpon>NetCfg_Form.cs</DependentUpon>
+    <EmbeddedResource Include="HuoYanNetCfg_Form.resx">
+      <DependentUpon>HuoYanNetCfg_Form.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="RuleCfg_Form.resx">
-      <DependentUpon>RuleCfg_Form.cs</DependentUpon>
+    <EmbeddedResource Include="HuoYanRuleCfg_Form.resx">
+      <DependentUpon>HuoYanRuleCfg_Form.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -174,6 +205,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Camera.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

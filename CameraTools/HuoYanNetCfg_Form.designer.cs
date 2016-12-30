@@ -1,6 +1,6 @@
 ﻿namespace CameraTools
 {
-    partial class NetCfg_Form
+    partial class HuoYanNetCfg_Form
     {
         /// <summary>
         /// Required designer variable.

@@ -166,5 +166,30 @@ namespace CameraTools
             }
             Marshal.FreeHGlobal(hwnd);
         }
+
+        private void btn_FocusNear_MouseDown(object sender, MouseEventArgs e)
+        {
+            HuoYanClientSdk.VzLPRClient_CtrlLens(OpenHwnd, HuoYanClientSdk.VZ_LENS_OPT.VZ_LENS_FOCUS_NEAR);
+        }
+
+        private void btn_FocusNear_MouseUp(object sender, MouseEventArgs e)
+        {
+            HuoYanClientSdk.VzLPRClient_CtrlLens(OpenHwnd, HuoYanClientSdk.VZ_LENS_OPT.VZ_LENS_OPT_STOP);
+        }
+
+        private void btn_FocusFar_MouseDown(object sender, MouseEventArgs e)
+        {
+            HuoYanClientSdk.VzLPRClient_CtrlLens(OpenHwnd, HuoYanClientSdk.VZ_LENS_OPT.VZ_LENS_FOCUS_FAR);
+        }
+
+        private void btn_ZoomWide_MouseDown(object sender, MouseEventArgs e)
+        {
+            HuoYanClientSdk.VzLPRClient_CtrlLens(OpenHwnd, HuoYanClientSdk.VZ_LENS_OPT.VZ_LENS_ZOOM_WIDE);
+        }
+
+        private void btn_ZoomTele_MouseDown(object sender, MouseEventArgs e)
+        {
+            HuoYanClientSdk.VzLPRClient_CtrlLens(OpenHwnd, HuoYanClientSdk.VZ_LENS_OPT.VZ_LENS_ZOOM_TELE);
+        }
     }
 }

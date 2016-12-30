@@ -3,13 +3,13 @@ using System.Windows.Forms;
 
 namespace CameraTools
 {
-    public partial class NetCfg_Form : Form
+    public partial class HuoYanNetCfg_Form : Form
     {
         private string m_strIP;
         private uint m_nSL = 0;
         private uint m_nSH = 0;
 
-        public NetCfg_Form(string strIP, uint SL, uint SH)
+        public HuoYanNetCfg_Form(string strIP, uint SL, uint SH)
         {
             InitializeComponent();
             m_strIP = strIP;
@@ -30,15 +30,16 @@ namespace CameraTools
             if (ret == 2)
             {
                 MessageBox.Show("设备IP跟网关不在同一网段，请重新输入!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
             else if (ret == -1)
             {
                 MessageBox.Show("修改网络参数失败，请重新输入!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
             MessageBox.Show("修改网络参数成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Tag = strIP;
-            Close();
+            this.DialogResult = DialogResult.OK;
         }
 
         private void NetCfg_Form_Load(object sender, EventArgs e)

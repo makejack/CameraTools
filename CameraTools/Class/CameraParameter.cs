@@ -5,7 +5,8 @@ namespace CameraTools
     public enum CameraTypes
     {
         AnShiBao = 0,
-        HuoYan = 1
+        HuoYan = 1,
+        QianYi = 2
     }
 
     public class CameraParameter

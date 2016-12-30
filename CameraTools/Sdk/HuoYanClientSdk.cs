@@ -78,6 +78,16 @@ namespace CameraTools
             VZ_InputType eInputType;		//触发输入的类型
         };
 
+        public enum VZ_LENS_OPT : uint
+        {
+            VZ_LENS_OPT_STOP,		/**<停止调节*/
+            VZ_LENS_FOCUS_FAR,		/**<往远处聚焦*/
+            VZ_LENS_FOCUS_NEAR,		/**<往近处聚焦*/
+            VZ_LENS_ZOOM_TELE,		/**<往长焦变倍*/
+            VZ_LENS_ZOOM_WIDE,		/**<往短焦变倍*/
+        }
+
+
         public const int MAX_OutputConfig_Len = 7;
         //输出配置信息
         public struct VZ_OutputConfigInfo
@@ -1772,5 +1782,13 @@ namespace CameraTools
         */
         [DllImport("VzLPRSDK.dll")]
         public static extern int VzLPRClient_SetIsOutputRealTimeResult(int handle, bool bOutput);
+
+        /**
+         *  @brief 调整设备镜头的变倍和聚焦
+         *  @param [IN] handle 由VzLPRClient_Open函数获得的句柄
+         *  @param [IN] eOPT 操作类型，详见定义VZ_LENS_OPT  
+         */
+        [DllImport("VzLPRSDK.dll")]
+        public static extern int VzLPRClient_CtrlLens(int handle, VZ_LENS_OPT eOPT);
     }
 }
