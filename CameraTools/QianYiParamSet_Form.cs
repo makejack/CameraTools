@@ -137,9 +137,9 @@ namespace CameraTools
         {
             QianYiClientSdk.T_LensControl lenscontrol = new QianYiClientSdk.T_LensControl()
             {
-                ucLensType = QianYiClientSdk.E_LensType.LENS_TYPE_FOCUS_AUTO_START,
-                ucLensAction = QianYiClientSdk.E_LensAction.LENS_ACTION_SUBTRACT,
-                ucLensSteps = 20
+                ucLensType = (byte)QianYiClientSdk.E_LensType.LENS_TYPE_FOCUS_AUTO_START,
+                ucLensAction = (byte)QianYiClientSdk.E_LensAction.LENS_ACTION_SUBTRACT,
+                ucLensSteps = 1
             };
             QianYiClientSdk.Net_LensControl(cameraHwnd, ref lenscontrol);
         }
@@ -148,9 +148,9 @@ namespace CameraTools
         {
             QianYiClientSdk.T_LensControl lenscontrol = new QianYiClientSdk.T_LensControl()
             {
-                ucLensType = QianYiClientSdk.E_LensType.LENS_TYPE_FOCUS_AUTO_STOP,
-                ucLensAction = QianYiClientSdk.E_LensAction.LENS_ACTION_SUBTRACT,
-                ucLensSteps = 20
+                ucLensType = (byte)QianYiClientSdk.E_LensType.LENS_TYPE_FOCUS_AUTO_STOP,
+                ucLensAction = (byte)QianYiClientSdk.E_LensAction.LENS_ACTION_SUBTRACT,
+                ucLensSteps = 1
             };
             QianYiClientSdk.Net_LensControl(cameraHwnd, ref lenscontrol);
         }
@@ -160,8 +160,8 @@ namespace CameraTools
 
             QianYiClientSdk.T_LensControl lenscontrol = new QianYiClientSdk.T_LensControl()
             {
-                ucLensType = QianYiClientSdk.E_LensType.LENS_TYPE_FOCUS_AUTO_START,
-                ucLensAction = QianYiClientSdk.E_LensAction.LENS_ACTION_ADD,
+                ucLensType = (byte)QianYiClientSdk.E_LensType.LENS_TYPE_FOCUS_AUTO_START,
+                ucLensAction = (byte)QianYiClientSdk.E_LensAction.LENS_ACTION_ADD,
                 ucLensSteps = 1
             };
             QianYiClientSdk.Net_LensControl(cameraHwnd, ref  lenscontrol);
@@ -171,8 +171,8 @@ namespace CameraTools
         {
             QianYiClientSdk.T_LensControl lenscontrol = new QianYiClientSdk.T_LensControl()
             {
-                ucLensType = QianYiClientSdk.E_LensType.LENS_TYPE_FOCUS_AUTO_STOP,
-                ucLensAction = QianYiClientSdk.E_LensAction.LENS_ACTION_ADD,
+                ucLensType = (byte)QianYiClientSdk.E_LensType.LENS_TYPE_FOCUS_AUTO_STOP,
+                ucLensAction = (byte)QianYiClientSdk.E_LensAction.LENS_ACTION_ADD,
                 ucLensSteps = 1
             };
             QianYiClientSdk.Net_LensControl(cameraHwnd, ref lenscontrol);
@@ -183,8 +183,8 @@ namespace CameraTools
 
             QianYiClientSdk.T_LensControl lenscontrol = new QianYiClientSdk.T_LensControl()
             {
-                ucLensType = QianYiClientSdk.E_LensType.LENS_TYPE_ZOOM_AUTO_START,
-                ucLensAction = QianYiClientSdk.E_LensAction.LENS_ACTION_SUBTRACT,
+                ucLensType = (byte)QianYiClientSdk.E_LensType.LENS_TYPE_ZOOM_AUTO_START,
+                ucLensAction = (byte)QianYiClientSdk.E_LensAction.LENS_ACTION_SUBTRACT,
                 ucLensSteps = 1
             };
             QianYiClientSdk.Net_LensControl(cameraHwnd, ref  lenscontrol);
@@ -194,8 +194,8 @@ namespace CameraTools
         {
             QianYiClientSdk.T_LensControl lenscontrol = new QianYiClientSdk.T_LensControl()
             {
-                ucLensType = QianYiClientSdk.E_LensType.LENS_TYPE_ZOOM_AUTO_STOP,
-                ucLensAction = QianYiClientSdk.E_LensAction.LENS_ACTION_SUBTRACT,
+                ucLensType = (byte)QianYiClientSdk.E_LensType.LENS_TYPE_ZOOM_AUTO_STOP,
+                ucLensAction = (byte)QianYiClientSdk.E_LensAction.LENS_ACTION_SUBTRACT,
                 ucLensSteps = 1
             };
             QianYiClientSdk.Net_LensControl(cameraHwnd, ref lenscontrol);
@@ -207,8 +207,8 @@ namespace CameraTools
 
             QianYiClientSdk.T_LensControl lenscontrol = new QianYiClientSdk.T_LensControl()
             {
-                ucLensType = QianYiClientSdk.E_LensType.LENS_TYPE_ZOOM_AUTO_START,
-                ucLensAction = QianYiClientSdk.E_LensAction.LENS_ACTION_ADD,
+                ucLensType = (byte)QianYiClientSdk.E_LensType.LENS_TYPE_ZOOM_AUTO_START,
+                ucLensAction = (byte)QianYiClientSdk.E_LensAction.LENS_ACTION_ADD,
                 ucLensSteps = 1
             };
             QianYiClientSdk.Net_LensControl(cameraHwnd, ref lenscontrol);
@@ -218,8 +218,8 @@ namespace CameraTools
         {
             QianYiClientSdk.T_LensControl lenscontrol = new QianYiClientSdk.T_LensControl()
             {
-                ucLensType = QianYiClientSdk.E_LensType.LENS_TYPE_ZOOM_AUTO_STOP,
-                ucLensAction = QianYiClientSdk.E_LensAction.LENS_ACTION_ADD,
+                ucLensType = (byte)QianYiClientSdk.E_LensType.LENS_TYPE_ZOOM_AUTO_STOP,
+                ucLensAction = (byte)QianYiClientSdk.E_LensAction.LENS_ACTION_ADD,
                 ucLensSteps = 1
             };
             QianYiClientSdk.Net_LensControl(cameraHwnd, ref lenscontrol);

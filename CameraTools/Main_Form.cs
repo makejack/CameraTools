@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Text;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -113,7 +114,7 @@ namespace CameraTools
             QianYiFindDeviceCallBack = FindDevice;
 
             //设置获取图片信息回调
-            QianYiGetImageCallBack = GetImage;
+            QianYiGetImageCallBack = PlateInfo;
 
             //芊熠全局初始化
             result = QianYiClientSdk.Net_Init();
@@ -133,12 +134,12 @@ namespace CameraTools
         /// <param name="tImageInfo"></param>
         /// <param name="tPicInfo"></param>
         /// <returns></returns>
-        private int GetImage(int tHandle, uint uiImageId, ref QianYiClientSdk.T_ImageUserInfo tImageInfo, ref QianYiClientSdk.T_PicInfo tPicInfo)
+        private int PlateInfo(int tHandle, uint uiImageId, ref QianYiClientSdk.T_ImageUserInfo tImageInfo, ref QianYiClientSdk.T_PicInfo tPicInfo)
         {
             //车辆图像
             if (tImageInfo.ucViolateCode == 0)
             {
-                string plate = System.Text.Encoding.Default.GetString(tImageInfo.szLprResult).Replace("\0", "");
+                string plate = Encoding.Default.GetString(tImageInfo.szLprResult).Replace("\0", "");
                 string cartype = "未知类型";
                 switch (tImageInfo.ucVehicleSize)//车型
                 {
@@ -288,10 +289,16 @@ namespace CameraTools
                 case HuoYanClientSdk.VZ_LPRC_COMMON_NOTIFY.VZ_LPRC_NO_ERR:
                     break;
                 case HuoYanClientSdk.VZ_LPRC_COMMON_NOTIFY.VZ_LPRC_ACCESS_DENIED:
-                    MessageBox.Show("用户名密码错误" + pStrDetail);
+                    if (MessageBox.Show(@"用户名密码错误" + pStrDetail + "，是否关闭摄像机连接", @"提示", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        CloseCamera(SelectedCamera.Tag as ConnectionCamera);
+                    }
                     break;
                 case HuoYanClientSdk.VZ_LPRC_COMMON_NOTIFY.VZ_LPRC_NETWORK_ERR:
-                    MessageBox.Show("网络连接故障" + pStrDetail);
+                    if (MessageBox.Show(@"网络连接故障" + pStrDetail + "，是否关闭摄像机连接", @"提示", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == System.Windows.Forms.DialogResult.Yes)
+                    {
+                        CloseCamera(SelectedCamera.Tag as ConnectionCamera);
+                    }
                     break;
             }
         }
@@ -542,7 +549,7 @@ namespace CameraTools
                     case CameraTypes.QianYi:
 
                         int nCamId = QianYiClientSdk.Net_AddCamera(cameraparam.pStrIPAddr);
-                        if (nCamId != 0)
+                        if (nCamId == -1)
                         {
                             MessageBox.Show("添加相机失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             pb.Dispose();

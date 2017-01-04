@@ -608,12 +608,12 @@ namespace CameraTools
         [StructLayout(LayoutKind.Sequential)]
         public struct T_LensControl
         {
-            public E_LensType ucLensType;
-            public E_LensAction ucLensAction;
+            public byte ucLensType;
+            public byte ucLensAction;
             public ushort ucLensSteps;// 1或20步
         }
 
-        public enum E_LensType : uint
+        public enum E_LensType : byte
         {
             LENS_TYPE_ZOOM_MANU = 0,  /*表示当前操作为单步调试变倍马达*/
             LENS_TYPE_ZOOM_AUTO_START, /* 表示当前操作变倍马达，下发开始转到命令*/
@@ -624,7 +624,7 @@ namespace CameraTools
             LENS_TYPE_MAX
         }
 
-        public enum E_LensAction : uint
+        public enum E_LensAction : byte
         {
             LENS_ACTION_SUBTRACT = 0,
             LENS_ACTION_ADD,
@@ -678,7 +678,27 @@ namespace CameraTools
             REPORT_MESS_MAX
         }
 
-
+        public enum E_ReturnCode
+        {
+            DC_NO_ERROR = 0,   //正常
+            DC_HANDLE_INVALID = 1,   //无效的句柄
+            DC_CONN_FAIL = 2,   //连接失败
+            DC_OBJ_BUSY = 3,   //对象忙
+            DC_OBJ_UNEXIST = 4,   //对象不存在
+            DC_CMD_INVALID = 5,   //命令无效
+            DC_PARA_INVALID = 6,   //参数无效
+            DC_REQ_TIMEOUT = 7,   //请求超时
+            DC_MEMORY_LACK = 8,   //内存申请失败
+            DC_SEND_FAIL = 9,   //数据发送失败
+            DC_RECV_FAIL = 10,  //数据接收失败
+            DC_OPT_FAIL = 11,  //操作失败
+            DC_NOT_CONN = 12,  //没有触发连接
+            DC_BEYOND_MAX_CLIENT = 13, //超出相机最大连接数量
+            DC_CONNECT_AUTH = 18,  /*连接鉴权*/
+            DC_USER_NOT_EXIST = 19, /*用户不存在*/
+            DC_PASSWD_ERROR = 20, /*密码错误*/
+            DC_UNDEFINED_ERROR = -1
+        }
 
     }
 }
