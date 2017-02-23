@@ -1559,12 +1559,16 @@ namespace CameraTools
                 pb.BringToFront();
             }
 
-            if (HideRecordImg == null)
+            if (HideRecordImg != null)
             {
-                HideRecordImg = new System.Timers.Timer(5000);
-                HideRecordImg.AutoReset = false;
-                HideRecordImg.Elapsed += HideRecordImg_Elapsed;
+                HideRecordImg.Stop();
+                HideRecordImg.Dispose();
+                HideRecordImg = null;
             }
+
+            HideRecordImg = new System.Timers.Timer(5000);
+            HideRecordImg.AutoReset = false;
+            HideRecordImg.Elapsed += HideRecordImg_Elapsed;
             HideRecordImg.Start();
         }
 
@@ -1604,10 +1608,9 @@ namespace CameraTools
                     pb = null;
                 }
             }
-            System.Timers.Timer currenttimer = sender as System.Timers.Timer;
-            currenttimer.Stop();
-            currenttimer.Dispose();
-            currenttimer = null;
+            HideRecordImg.Stop();
+            HideRecordImg.Dispose();
+            HideRecordImg = null;
         }
 
         /// <summary>
