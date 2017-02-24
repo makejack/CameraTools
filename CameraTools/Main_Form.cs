@@ -47,6 +47,7 @@ namespace CameraTools
             }
         }
         private long Number;
+        private object Lockobj = new object();
 
         #region 安视宝绘制虚拟线圈参数
 
@@ -1559,12 +1560,7 @@ namespace CameraTools
                 pb.BringToFront();
             }
 
-            if (HideRecordImg != null)
-            {
-                HideRecordImg.Stop();
-                HideRecordImg.Dispose();
-                HideRecordImg = null;
-            }
+            LockHideRecordImg();
 
             HideRecordImg = new System.Timers.Timer(5000);
             HideRecordImg.AutoReset = false;
@@ -1608,9 +1604,20 @@ namespace CameraTools
                     pb = null;
                 }
             }
-            HideRecordImg.Stop();
-            HideRecordImg.Dispose();
-            HideRecordImg = null;
+            LockHideRecordImg();
+        }
+
+        private void LockHideRecordImg()
+        {
+            lock (Lockobj)
+            {
+                if (HideRecordImg != null)
+                {
+                    HideRecordImg.Stop();
+                    HideRecordImg.Dispose();
+                    HideRecordImg = null;
+                }
+            }
         }
 
         /// <summary>

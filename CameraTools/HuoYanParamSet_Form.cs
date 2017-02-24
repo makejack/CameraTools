@@ -33,12 +33,12 @@ namespace CameraTools
             ret = HuoYanClientSdk.VzLPRClient_GetSupportedProvinces(OpenHwnd, ref Provinceinfo);
             if (ret == 0)
             {
-                cb_Provinces.SelectedIndex = Provinceinfo.nCurrIndex;
+                if (Provinceinfo.nCurrIndex >= 0)
+                    cb_Provinces.SelectedIndex = Provinceinfo.nCurrIndex + 1;
+                else
+                    cb_Provinces.SelectedIndex = 0;
             }
-            else
-            {
-                cb_Provinces.SelectedIndex = 0;
-            }
+
 
             Ledctrl = HuoYanClientSdk.VZ_LED_CTRL.VZ_LED_AUTO;
             ret = HuoYanClientSdk.VzLPRClient_GetLEDLightControlMode(OpenHwnd, ref Ledctrl);
@@ -82,7 +82,7 @@ namespace CameraTools
             if (Provinceinfo.nCurrIndex != cb_Provinces.SelectedIndex)
             {
                 Provinceinfo.nCurrIndex = cb_Provinces.SelectedIndex - 1;
-                int ret = HuoYanClientSdk.VzLPRClient_PresetProvinceIndex(OpenHwnd, cb_Provinces.SelectedIndex);
+                int ret = HuoYanClientSdk.VzLPRClient_PresetProvinceIndex(OpenHwnd, Provinceinfo.nCurrIndex);
                 if (ret != 0)
                 {
                     MessageBox.Show("预设省份设置失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
