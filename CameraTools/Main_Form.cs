@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 namespace CameraTools
 {
@@ -128,6 +129,16 @@ namespace CameraTools
         }
 
         /// <summary>
+        /// 当窗体被停用时关闭记录图像显示
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Main_Form_Deactivate(object sender, EventArgs e)
+        {
+            HideRecordImg_Elapsed(null, null);
+        }
+
+        /// <summary>
         /// 通过注册回调获取图片信息
         /// </summary>
         /// <param name="tHandle"></param>
@@ -140,40 +151,26 @@ namespace CameraTools
             //车辆图像
             if (tImageInfo.ucViolateCode == 0)
             {
-                string plate = Encoding.Default.GetString(tImageInfo.szLprResult).Replace("\0", "");
+                string input = Encoding.Default.GetString(tImageInfo.szLprResult);
+                string plate = ReplacePlateStr(input);
                 string cartype = "未知类型";
                 switch (tImageInfo.ucVehicleSize)//车型
                 {
                     case 1:
-                        {
-                            cartype = "大型车";
-                            break;
-                        }
+                        cartype = "大型车";
+                        break;
                     case 2:
-                        {
-                            cartype = "中型车";
-                            break;
-                        }
+                        cartype = "中型车";
+                        break;
                     case 3:
-                        {
-                            cartype = "小型车";
-                            break;
-                        }
+                        cartype = "小型车";
+                        break;
                     case 4:
-                        {
-                            cartype = "摩托车";
-                            break;
-                        }
+                        cartype = "摩托车";
+                        break;
                     case 5:
-                        {
-                            cartype = "行人";
-                            break;
-                        }
-                    default:
-                        {
-                            cartype = "未知车型";
-                            break;
-                        }
+                        cartype = "行人";
+                        break;
                 }
                 string color = "未识别";
                 switch (tImageInfo.ucPlateColor)//车牌颜色
@@ -190,40 +187,40 @@ namespace CameraTools
                     case 3:
                         color = "黑色";
                         break;
-                    case 4:
-                    default:
-                        color = "未识别";
-                        break;
                 }
 
-                string fullpath = string.Empty;
-                string platepath = string.Empty;
+                string fullpath = string.Empty, platepath = string.Empty;
                 DateTime now = GetImgSavePath(plate, ref fullpath, ref platepath);
 
-                FileStream fs;
                 if (tPicInfo.ptPanoramaPicBuff != IntPtr.Zero && tPicInfo.uiPanoramaPicLen != 0)
                 {
-                    byte[] BytePanoramaPicBuff = new byte[tPicInfo.uiPanoramaPicLen];
-                    Marshal.Copy(tPicInfo.ptPanoramaPicBuff, BytePanoramaPicBuff, 0, (int)tPicInfo.uiPanoramaPicLen);
-                    fs = new FileStream(fullpath, FileMode.Create, FileAccess.Write | FileAccess.Read, FileShare.None);
-                    fs.Write(BytePanoramaPicBuff, 0, (int)tPicInfo.uiPanoramaPicLen);
-                    fs.Close();
-                    fs.Dispose();
+                    QianYiImgSave(fullpath, tPicInfo.ptPanoramaPicBuff, (int)tPicInfo.uiPanoramaPicLen);
                 }
 
                 if (tPicInfo.ptVehiclePicBuff != IntPtr.Zero && tPicInfo.uiVehiclePicLen != 0)
                 {
-                    byte[] ByteVehiclePicBuff = new byte[tPicInfo.uiVehiclePicLen];
-                    Marshal.Copy(tPicInfo.ptVehiclePicBuff, ByteVehiclePicBuff, 0, (int)tPicInfo.uiVehiclePicLen);
-                    fs = new FileStream(platepath, FileMode.Create, FileAccess.Write | FileAccess.Read, FileShare.None);
-                    fs.Write(ByteVehiclePicBuff, 0, (int)tPicInfo.uiVehiclePicLen);
-                    fs.Close();
-                    fs.Dispose();
+                    QianYiImgSave(platepath, tPicInfo.ptVehiclePicBuff, (int)tPicInfo.uiVehiclePicLen);
                 }
 
                 ShowPlateInfo(tHandle, platepath, plate, now, cartype, color);
             }
             return 0;
+        }
+
+        /// <summary>
+        /// 保存图片
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="picbuff"></param>
+        /// <param name="len"></param>
+        private void QianYiImgSave(string path, IntPtr picbuff, int len)
+        {
+            byte[] by = new byte[len];
+            Marshal.Copy(picbuff, by, 0, len);
+            FileStream fs = new FileStream(path, FileMode.Create, FileAccess.Write | FileAccess.Read, FileShare.None);
+            fs.Write(by, 0, len);
+            fs.Close();
+            fs.Dispose();
         }
 
         /// <summary>
@@ -669,7 +666,7 @@ namespace CameraTools
         /// <param name="e"></param>
         void pb_Move(object sender, EventArgs e)
         {
-            fp_Left.Refresh();
+            fp_Left.Invalidate(false);
         }
 
         /// <summary>
@@ -741,8 +738,19 @@ namespace CameraTools
                     ConnectionCamera param = pb.Tag as ConnectionCamera;
                     Text = param.IP;
                 }
-                fp_Left.Refresh();
+                fp_Left.Invalidate(false);
             }
+        }
+
+        /// <summary>
+        /// 替换车牌内的字符
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        private string ReplacePlateStr(string input)
+        {
+            string pattern = @"\\0|\\";
+            return Regex.Replace(input, pattern, "");
         }
 
         /// <summary>
@@ -763,7 +771,8 @@ namespace CameraTools
 
                 //获取车牌识别结果信息
                 HuoYanClientSdk.TH_PlateResult plateresult = (HuoYanClientSdk.TH_PlateResult)Marshal.PtrToStructure(pResult, typeof(HuoYanClientSdk.TH_PlateResult));
-                string strlicense = new string(plateresult.license).Replace("\0", "");
+                string input = new string(plateresult.license);
+                string strlicense = ReplacePlateStr(input);
                 string cartype = "未知车牌";
                 switch (plateresult.nType)
                 {
@@ -845,8 +854,7 @@ namespace CameraTools
                         color = "绿色";
                         break;
                 }
-                string fullpath = string.Empty;
-                string platepath = string.Empty;
+                string fullpath = string.Empty, platepath = string.Empty;
                 DateTime now = GetImgSavePath(strlicense, ref fullpath, ref platepath);
                 if (!File.Exists(fullpath))
                     HuoYanClientSdk.VzLPRClient_ImageSaveToJpeg(pImgFull, fullpath, 100);
@@ -913,9 +921,7 @@ namespace CameraTools
                     if (ret == 0)
                     {
                         string plate = Marshal.PtrToStringAnsi(license);
-                        string fullpath = string.Empty;
-                        string platepath = string.Empty;
-                        string strcolor = string.Empty;
+                        string fullpath = string.Empty, platepath = string.Empty, strcolor = string.Empty;
                         DateTime now = GetImgSavePath(plate, ref fullpath, ref platepath);
                         FileStream fs;
                         byte[] by;
@@ -986,7 +992,24 @@ namespace CameraTools
             DelegateThread ShowInfo = delegate
             {
                 Number++;
-                dgv_ResultList.Rows.Add(new object[] { Number, ip, Image.FromFile(platepath), plate, now, platetype, color });
+                dgv_ResultList.Rows.Insert(0, new object[] { Number, ip, Image.FromFile(platepath), plate, now, platetype, color });
+                Color c = Color.White;
+                switch (color)
+                {
+                    case "蓝色":
+                        c = Color.Blue;
+                        break;
+                    case "黄色":
+                        c = Color.Yellow;
+                        break;
+                    case "黑色":
+                        c = Color.Black;
+                        break;
+                    case "绿色":
+                        c = Color.Green;
+                        break;
+                }
+                dgv_ResultList.Rows[0].Cells[3].Style.BackColor = c;
                 if (dgv_ResultList.RowCount > 50)
                 {
                     dgv_ResultList.Rows.RemoveAt(0);
@@ -1115,6 +1138,7 @@ namespace CameraTools
                     item.Height = fp_Left.Height - 8;
                 }
             }
+            fp_Left.Invalidate(false);
         }
 
         /// <summary>
@@ -1142,6 +1166,7 @@ namespace CameraTools
                         g.DrawString(cameraparam.IP, Font, Brushes.Blue, new RectangleF(item.Left, item.Bottom, item.Width, item.Margin.Bottom), sf);
                     }
                 }
+                g.DrawLine(new Pen(Color.FromArgb(172, 168, 153), 1), 0, fp_Left.Height - 1, fp_Left.Width - 1, fp_Left.Height - 1);
             }
         }
 
@@ -1204,7 +1229,7 @@ namespace CameraTools
         /// <param name="e"></param>
         private void dgv_ResultList_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
-            dgv_ResultList.FirstDisplayedScrollingRowIndex = dgv_ResultList.RowCount - 1;
+            dgv_ResultList.FirstDisplayedScrollingRowIndex = e.RowIndex;
         }
 
         /// <summary>
@@ -1480,8 +1505,7 @@ namespace CameraTools
                     process.StartInfo.FileName = processpath;
                     process.Start();
                     break;
-                case CameraTypes.QianYi:
-                case CameraTypes.HuoYan:
+                default:
                     if (cameraparam.CameraType == CameraTypes.HuoYan)
                     {
                         using (HuoYanNetCfg_Form nf = new HuoYanNetCfg_Form(cameraparam.IP, cameraparam.SL, cameraparam.SH))
@@ -1529,8 +1553,7 @@ namespace CameraTools
 
             DateTime time = Convert.ToDateTime(dgv_ResultList.Rows[e.RowIndex].Cells["c_Time"].Value);
             string plate = dgv_ResultList.Rows[e.RowIndex].Cells["c_StrPlate"].Value.ToString();
-            string fullpath = string.Empty;
-            string platepath = string.Empty;
+            string fullpath = string.Empty, platepath = string.Empty;
             GetImgSavePath(plate, time, ref fullpath, ref platepath);
             if (!File.Exists(fullpath)) return;
             Control[] findcontrol = Controls.Find("pb_ShowRecordImg", false);
@@ -1555,6 +1578,10 @@ namespace CameraTools
                 pb.Image = Image.FromFile(fullpath);
                 pb.Size = new Size(384, 216);
                 pb.Location = GetImgShowPoint(pb.Size);
+                pb.MouseEnter += new EventHandler(RecordImg_MouseEnter);
+                pb.MouseLeave += new EventHandler(RecordImg_MouseLeave);
+                pb.Paint += new PaintEventHandler(RecordImg_Paint);
+                pb.MouseUp += new MouseEventHandler(RecordImg_MouseUp);
                 Controls.Add(pb);
                 pb.Show();
                 pb.BringToFront();
@@ -1562,10 +1589,87 @@ namespace CameraTools
 
             LockHideRecordImg();
 
+            StartHideRecordImgThread();
+        }
+
+        /// <summary>
+        /// 图像控件鼠标弹超事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void RecordImg_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left) return;
+            PictureBox pb = sender as PictureBox;
+            if (pb == null) return;
+            Rectangle rect = GetCloseRecordImgRect(pb.Width);
+            if (!rect.Contains(e.Location)) return;
+            pb.Visible = false;
+            pb.Dispose();
+            pb = null;
+            LockHideRecordImg();
+        }
+
+        /// <summary>
+        /// 图像控件重绘
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void RecordImg_Paint(object sender, PaintEventArgs e)
+        {
+            PictureBox pb = sender as PictureBox;
+            if (pb == null) return;
+            Graphics g = e.Graphics;
+            Rectangle rect = GetCloseRecordImgRect(pb.Width);
+            StringFormat sf = new StringFormat()
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            g.FillRectangle(Brushes.Red, rect);
+            g.DrawString("ｘ", new Font("微软雅黑", 13.0f), Brushes.White, rect, sf);
+        }
+
+        /// <summary>
+        /// 获取关闭图像显示的位置区域
+        /// </summary>
+        /// <returns></returns>
+        private Rectangle GetCloseRecordImgRect(int controlwidth)
+        {
+            int width = 30, height = 25;
+            Rectangle rect = new Rectangle(controlwidth - width, 0, width, height);
+            return rect;
+        }
+
+        /// <summary>
+        /// 开启线程关闭图像显示
+        /// </summary>
+        private void StartHideRecordImgThread()
+        {
             HideRecordImg = new System.Timers.Timer(5000);
             HideRecordImg.AutoReset = false;
             HideRecordImg.Elapsed += HideRecordImg_Elapsed;
             HideRecordImg.Start();
+        }
+
+        /// <summary>
+        /// 鼠标移出图像控件时开始关闭线程
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void RecordImg_MouseLeave(object sender, EventArgs e)
+        {
+            StartHideRecordImgThread();
+        }
+
+        /// <summary>
+        /// 鼠标进入图像控件时停止关闭线程
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void RecordImg_MouseEnter(object sender, EventArgs e)
+        {
+            LockHideRecordImg();
         }
 
         /// <summary>
@@ -1607,6 +1711,9 @@ namespace CameraTools
             LockHideRecordImg();
         }
 
+        /// <summary>
+        /// 使用线程锁锁住关闭图像线程方法
+        /// </summary>
         private void LockHideRecordImg()
         {
             lock (Lockobj)
@@ -1643,5 +1750,6 @@ namespace CameraTools
                 g.DrawLine(new Pen(Brushes.Black, 1), 0, 0, 0, p_Right.Height);
             }
         }
+
     }
 }

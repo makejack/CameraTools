@@ -110,12 +110,6 @@
     <Compile Include="Sdk\AnShiBaoClientSdk.cs" />
     <Compile Include="Class\CameraParameter.cs" />
     <Compile Include="Sdk\QianYiClientSdk.cs" />
-    <Compile Include="Vodio_Form.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Vodio_Form.Designer.cs">
-      <DependentUpon>Vodio_Form.cs</DependentUpon>
-    </Compile>
     <Compile Include="Class\ConnectionCamera.cs" />
     <Compile Include="Main_Form.cs">
       <SubType>Form</SubType>
@@ -146,9 +140,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="QianYiRuleCfg_Form.resx">
       <DependentUpon>QianYiRuleCfg_Form.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Vodio_Form.resx">
-      <DependentUpon>Vodio_Form.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Main_Form.resx">
       <DependentUpon>Main_Form.cs</DependentUpon>
@@ -184,15 +175,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\success.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\buttonnone.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\buttondown.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\buttonmove.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

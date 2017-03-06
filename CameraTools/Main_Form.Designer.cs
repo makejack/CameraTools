@@ -89,11 +89,11 @@
             // btn_ModifyIp
             // 
             this.btn_ModifyIp.Enabled = false;
-            this.btn_ModifyIp.Location = new System.Drawing.Point(127, 24);
+            this.btn_ModifyIp.Location = new System.Drawing.Point(50, 34);
             this.btn_ModifyIp.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btn_ModifyIp.Name = "btn_ModifyIp";
-            this.btn_ModifyIp.Size = new System.Drawing.Size(87, 33);
-            this.btn_ModifyIp.TabIndex = 5;
+            this.btn_ModifyIp.Size = new System.Drawing.Size(120, 33);
+            this.btn_ModifyIp.TabIndex = 0;
             this.btn_ModifyIp.Text = "修改 IP";
             this.btn_ModifyIp.UseVisualStyleBackColor = true;
             this.btn_ModifyIp.Click += new System.EventHandler(this.btn_ModifyIp_Click);
@@ -101,11 +101,11 @@
             // btn_RuleCfg
             // 
             this.btn_RuleCfg.Enabled = false;
-            this.btn_RuleCfg.Location = new System.Drawing.Point(6, 24);
+            this.btn_RuleCfg.Location = new System.Drawing.Point(50, 89);
             this.btn_RuleCfg.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btn_RuleCfg.Name = "btn_RuleCfg";
-            this.btn_RuleCfg.Size = new System.Drawing.Size(87, 33);
-            this.btn_RuleCfg.TabIndex = 4;
+            this.btn_RuleCfg.Size = new System.Drawing.Size(120, 33);
+            this.btn_RuleCfg.TabIndex = 1;
             this.btn_RuleCfg.Text = "线圈设置";
             this.btn_RuleCfg.UseVisualStyleBackColor = true;
             this.btn_RuleCfg.Click += new System.EventHandler(this.btn_RuleCfg_Click);
@@ -113,11 +113,11 @@
             // btn_ParamSet
             // 
             this.btn_ParamSet.Enabled = false;
-            this.btn_ParamSet.Location = new System.Drawing.Point(6, 77);
+            this.btn_ParamSet.Location = new System.Drawing.Point(50, 144);
             this.btn_ParamSet.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btn_ParamSet.Name = "btn_ParamSet";
-            this.btn_ParamSet.Size = new System.Drawing.Size(87, 33);
-            this.btn_ParamSet.TabIndex = 6;
+            this.btn_ParamSet.Size = new System.Drawing.Size(120, 33);
+            this.btn_ParamSet.TabIndex = 2;
             this.btn_ParamSet.Text = "参数设置";
             this.btn_ParamSet.UseVisualStyleBackColor = true;
             this.btn_ParamSet.Click += new System.EventHandler(this.btn_ParamSet_Click);
@@ -125,7 +125,7 @@
             // btn_Close
             // 
             this.btn_Close.Enabled = false;
-            this.btn_Close.Location = new System.Drawing.Point(140, 314);
+            this.btn_Close.Location = new System.Drawing.Point(134, 314);
             this.btn_Close.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btn_Close.Name = "btn_Close";
             this.btn_Close.Size = new System.Drawing.Size(87, 33);
@@ -137,7 +137,7 @@
             // btn_Open
             // 
             this.btn_Open.Enabled = false;
-            this.btn_Open.Location = new System.Drawing.Point(6, 314);
+            this.btn_Open.Location = new System.Drawing.Point(13, 314);
             this.btn_Open.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.btn_Open.Name = "btn_Open";
             this.btn_Open.Size = new System.Drawing.Size(87, 33);
@@ -181,7 +181,6 @@
             // fp_Left
             // 
             this.fp_Left.AutoScroll = true;
-            this.fp_Left.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.fp_Left.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fp_Left.Location = new System.Drawing.Point(0, 0);
             this.fp_Left.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -200,6 +199,7 @@
             this.dgv_ResultList.BackgroundColor = System.Drawing.Color.White;
             this.dgv_ResultList.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgv_ResultList.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
+            this.dgv_ResultList.ClipboardCopyMode = System.Windows.Forms.DataGridViewClipboardCopyMode.Disable;
             this.dgv_ResultList.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle1.BackColor = System.Drawing.Color.White;
@@ -228,9 +228,11 @@
             this.dgv_ResultList.RowHeadersVisible = false;
             this.dgv_ResultList.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dgv_ResultList.RowTemplate.Height = 36;
+            this.dgv_ResultList.RowTemplate.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.dgv_ResultList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgv_ResultList.Size = new System.Drawing.Size(801, 198);
             this.dgv_ResultList.TabIndex = 0;
+            this.dgv_ResultList.TabStop = false;
             this.dgv_ResultList.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgv_ResultList_CellClick);
             this.dgv_ResultList.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dgv_ResultList_CellFormatting);
             this.dgv_ResultList.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.dgv_ResultList_RowsAdded);
@@ -248,6 +250,7 @@
             this.c_IP.HeaderText = "IP 地址";
             this.c_IP.Name = "c_IP";
             this.c_IP.ReadOnly = true;
+            this.c_IP.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.c_IP.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             // 
             // c_plate
@@ -261,6 +264,7 @@
             // 
             // c_StrPlate
             // 
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("微软雅黑", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.c_StrPlate.DefaultCellStyle = dataGridViewCellStyle2;
             this.c_StrPlate.HeaderText = "识别车牌";
@@ -289,6 +293,7 @@
             this.Column5.ReadOnly = true;
             this.Column5.Resizable = System.Windows.Forms.DataGridViewTriState.False;
             this.Column5.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            this.Column5.Width = 150;
             // 
             // Column6
             // 
@@ -311,6 +316,7 @@
             this.Name = "Main_Form";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "识别像机配置工具";
+            this.Deactivate += new System.EventHandler(this.Main_Form_Deactivate);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
             this.Load += new System.EventHandler(this.Main_Form_Load);
             this.p_Right.ResumeLayout(false);
